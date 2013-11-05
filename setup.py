@@ -42,6 +42,6 @@ setup(name='pyaib',
           'gevent >= 1.0dev',
           'PyYAML >= 3.09',
       ],
-      dependency_links = [
+      dependency_links=[
           'git+git://github.com/surfly/gevent.git@1.0rc3#egg=gevent'
       ])
