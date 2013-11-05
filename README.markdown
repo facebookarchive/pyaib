@@ -11,9 +11,17 @@ Features
 * plugin system
 * simple nickserv auth
 
-
+Setup
+=====
+<pre><code>python setup.py build
+python setup.py install</code></pre>
 
 Example
 ========
 
-Take a look at the examples directory for an example bot called 'botbot'
+Take a look at the example directory for an example bot called 'botbot'
+
+Run:
+<pre><code>python example/botbot.py</code></pre>
+
+Try adding your own plugins in example/plugins.
