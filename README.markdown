@@ -6,10 +6,10 @@ for its Asynchronous bits.
 
 Features
 ========
-SSL/IPv6
-YAML config
-plugin system
-simple nickserv auth
+*SSL/IPv6
+*YAML config
+*plugin system
+*simple nickserv auth
 
 Example
 ========
