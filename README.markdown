@@ -1,15 +1,17 @@
-Python Asynchronous Irc Bot framework (pyaib)
-=============================================
+Python Async IrcBot framework (pyaib)
+=====================================
 
 pyaib is an easy to use framework for writing irc bots. pyaib uses gevent
 for its Asynchronous bits.
 
 Features
 ========
-*SSL/IPv6
-*YAML config
-*plugin system
-*simple nickserv auth
+* SSL/IPv6
+* YAML config
+* plugin system
+* simple nickserv auth
+
+
 
 Example
 ========
