@@ -43,5 +43,5 @@ setup(name='pyaib',
           'PyYAML >= 3.09',
       ],
       dependency_links=[
-          'git+git://github.com/surfly/gevent.git@1.0rc3#egg=gevent'
+          'https://github.com/surfly/gevent/tarball/1.0rc3#egg=gevent'
       ])
