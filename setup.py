@@ -20,7 +20,7 @@ except ImportError:
     from distutils.core import setup
 
 #Pull version out of the module
-from .pyaib import __version__
+from pyaib import __version__
 
 setup(name='pyaib',
       version=__version__,

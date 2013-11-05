@@ -18,6 +18,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import inspect
 import collections
+from importlib import import_module
 
 from .util.decorator import EasyDecorator
 
@@ -196,7 +197,8 @@ class ComponentManager(object):
         basename = name.split('.').pop()
         config = self.context.config.setdefault(basename, {})
         print("Loading Component %s..." % name)
-        self._process_component(name, None, CLASS_MARKER, self.context, config)
+        self._process_component(name, 'pyaib', CLASS_MARKER,
+                                self.context, config)
 
     def load_configured(self, autoload=None):
         """
@@ -257,15 +259,14 @@ class ComponentManager(object):
         return annotated_callables
 
     def _process_component(self, name, path, class_marker, context, config):
-        importname = name
-        if path is not None and not name.startswith('/'):
-            importname = '%s.%s' % (path, name)
-        elif name.startswith('/'):  # Strip off 'root'
-            importname = name = name[1:]
+        if name.startswith('/'):
+            importname = name[1:]
+            path = None
+        else:
+            importname = '.'.join([path, name])
 
         try:
-            component_ns = __import__(importname, globals(), locals(),
-                                      ['*'], -1)
+            component_ns = import_module(importname)
         except ImportError as e:
             raise ImportError('pyaib failed to load (%s): %r'
                               % (importname, e))

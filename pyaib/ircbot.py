@@ -18,11 +18,11 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 #WE want the ares resolver, screw thread-pool
+import os
 os.environ['GEVENT_RESOLVER'] = 'ares'
 import gevent.monkey
 gevent.monkey.patch_all()
 
-import os
 #Screw you python, lets try this for unicode support
 import sys
 reload(sys)

@@ -26,7 +26,7 @@ import gevent
 from .linesocket import LineSocket
 from .util import data
 from .util.decorator import raise_exceptions
-
+from . import __version__ as pyaib_version
 
 #Class for storing irc related information
 class Context(data.Object):
@@ -197,7 +197,9 @@ class Client(object):
             if options.password:  # Use a password if one is issued
                 #TODO allow password to be associated with server url
                 irc_c.RAW('PASS %s' % options.password)
-            irc_c.RAW('USER %s 8 * :%s' % (options.user, options.realname))
+            irc_c.RAW('USER %s 8 * :%s'
+                      % (options.user,
+                         options.realname.format(version=pyaib_version)))
             irc_c.NICK(options.nick)
         events('IRC_SOCKET_CONNECT').observe(REGISTER)
 
