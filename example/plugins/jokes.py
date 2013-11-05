@@ -29,21 +29,18 @@ class Jokes(object):
 
     @keyword('roulette')
     @keyword.nosubs
-    @keyword.helponly
+    @keyword.autohelp_noargs
     def roulette_root(self, irc_c, msg, trigger, args, kargs):
-        """=> play russian roulette One round in a six chambered gun.
- Take turns to spin the cylinder until somebody dies.
- roulette reload => force the gun to reload
- roulette stats => show stats from all games,
- roulette stats <player> => show stats for <player>,
- roulette clearstats => clear stats,
- roulette spin => spins the cylinder
-        """
+        """[spin|reload|stats|clearstats] :: Play russian roulette.
+ One round in a six chambered gun.
+ Take turns to spin the cylinder until somebody dies."""
         pass
 
     @keyword('roulette')
     @keyword.sub('spin')
+    @keyword.autohelp
     def roulette_spin(self, irc_c, msg, trigger, args, kargs):
+        ''':: spins the cylinder'''
         if self.r.fire(msg.nick):
             msg.reply("BANG! %s %s" % (msg.nick, Roulette.unluckyMsg()))
         else:
@@ -51,12 +48,16 @@ class Jokes(object):
 
     @keyword('roulette')
     @keyword.sub('reload')
+    @keyword.autohelp
     def roulette_reload(self, irc_c, msg, trigger, args, kargs):
+        ''':: force the gun to reload'''
         self.r.reload()
 
     @keyword('roulette')
     @keyword.sub('stats')
+    @keyword.autohelp
     def roulette_stats(self, irc_c, msg, trigger, args, kargs):
+        '''[player] :: show stats from all games'''
         if len(args) == 0:
             stats = self.r.getGlobalStats()
             msg.reply("In all games there were %d misses and %d kills"
@@ -69,11 +70,15 @@ class Jokes(object):
 
     @keyword('roulette')
     @keyword.sub('clearstats')
+    @keyword.autohelp
     def roulette_clearstats(self, irc_c, msg, trigger, args, kargs):
+        ''':: clear stats'''
         self.r.clear()
 
     @keyword('8ball')
+    @keyword.autohelp_noargs
     def magic_8ball(self, irc_c, msg, trigger, args, kargs):
+        """[question]? :: Ask the magic 8 ball a question."""
         if not msg.message.endswith('?'):
             msg.reply("%s: that does not look like a question to me" %
                       msg.nick)
