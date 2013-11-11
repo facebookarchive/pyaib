@@ -36,7 +36,7 @@ class Event(object):
         return self
 
     def unobserve(self, observer):
-        self.__handlers.remove(observer)
+        self.__observers.remove(observer)
         return self
 
     def fire(self, *args, **keywargs):
