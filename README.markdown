@@ -13,7 +13,8 @@ Features
 
 Setup
 =====
-<pre><code>python setup.py build
+<pre><code>pip install cython git+git://github.com/surfly/gevent.git@1.0rc3#egg=gevent
+python setup.py build
 python setup.py install</code></pre>
 
 Example
