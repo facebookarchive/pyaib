@@ -13,8 +13,10 @@ Features
 
 Setup
 =====
-<pre><code>
-python setup.py build
+<pre><code>pip install pyaib</code></pre>
+
+or 
+<pre><code>python setup.py build
 python setup.py install</code></pre>
 
 Example
