@@ -39,9 +39,6 @@ setup(name='pyaib',
       ],
       install_requires=[
           'pyOpenSSL >= 0.12',
-          'gevent >= 1.0dev',
+          'gevent >= 1.0',
           'PyYAML >= 3.09',
-      ],
-      dependency_links=[
-          'https://github.com/surfly/gevent/tarball/1.0rc3#egg=gevent'
       ])
