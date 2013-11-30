@@ -312,14 +312,15 @@ class Message (object):
 
 class Sender(unicode):
     """all the logic one would need for understanding sender part of irc msg"""
-    def __new__(self, sender):
+    def __new__(cls, sender):
         #Pull out each of the pieces at instance time
         if '!' in sender:
             nick, _, usermask = sender.partition('!')
-            self._user, _, self._hostname = usermask.partition('@')
-            return unicode.__new__(self, nick)
+            inst = unicode.__new__(cls, nick)
+            inst._user, _, inst._hostname = usermask.partition('@')
+            return inst
         else:
-            return unicode.__new__(self, sender)
+            return unicode.__new__(cls, sender)
 
     @property
     def raw(self):
