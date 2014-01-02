@@ -3,3 +3,4 @@ dist
 .idea
 *.egg-info
 *.pyc
+botbot-facebook.conf
