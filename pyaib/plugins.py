@@ -42,8 +42,11 @@ def plugin_class(cls):
         setattr(cls, CLASS_MARKER, True)
         return cls
 
+plugin_class.requires = component_class.requires
+
 
 @component_class('plugins')
+@component_class.requires('triggers')
 class PluginManager(ComponentManager):
     def __init__(self, context, config):
         ComponentManager.__init__(self, context, config)
@@ -56,5 +59,6 @@ class PluginManager(ComponentManager):
         basename = name.split('.').pop()
         config = self.context.config.setdefault("plugin.%s" % basename, {})
         print("Loading Plugin %s..." % name)
-        self._process_component(name, self.config.base, CLASS_MARKER,
-                                self.context, config)
+        ns = self._process_component(name, self.config.base, CLASS_MARKER,
+                                     self.context, config)
+        self._loaded_components["plugin.%s" % basename].set(ns)

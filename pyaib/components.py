@@ -20,6 +20,9 @@ import inspect
 import collections
 from importlib import import_module
 
+from gevent.event import AsyncResult
+import gevent
+
 from .util.decorator import EasyDecorator
 
 __all__ = ['component_class',
@@ -30,8 +33,6 @@ __all__ = ['component_class',
 
 #Used to mark classes for later inspection
 CLASS_MARKER = '_PYAIB_COMPONENT'
-
-#TODO: Include way to require a plugin or component be loaded first
 
 
 def component_class(cls):
@@ -51,6 +52,15 @@ def component_class(cls):
     elif inspect.isclass(cls):
         setattr(cls, CLASS_MARKER, True)
         return cls
+
+
+def _requires(*names):
+    def wrapper(cls):
+        cls.__requires__ = names
+        return cls
+    return wrapper
+
+component_class.requires = _requires
 
 
 def _get_plugs(method, kind):
@@ -185,7 +195,7 @@ class ComponentManager(object):
 
     def __init__(self, context, config):
         """ Needs a irc context and its config """
-        self._loaded_components = {}
+        self._loaded_components = collections.defaultdict(AsyncResult)
         self.context = context
         self.config = config
 
@@ -197,8 +207,12 @@ class ComponentManager(object):
         basename = name.split('.').pop()
         config = self.context.config.setdefault(basename, {})
         print("Loading Component %s..." % name)
-        self._process_component(name, 'pyaib', CLASS_MARKER,
-                                self.context, config)
+        ns = self._process_component(name, 'pyaib', CLASS_MARKER,
+                                     self.context, config)
+        self._loaded_components[basename].set(ns)
+
+    def _require(self, name):
+        self._loaded_components[name].wait()
 
     def load_configured(self, autoload=None):
         """
@@ -215,12 +229,12 @@ class ComponentManager(object):
                 self.config.load = self.config.load.split(' ')
             [components.append(comp) for comp in self.config.load
              if comp not in components]
-        for component in components:
-            self.load(component)
+        gevent.joinall([gevent.spawn(self.load, component)
+                        for component in components])
 
     def is_loaded(self, name):
         """ Determine by name if a component is loaded """
-        return name in self._loaded_components
+        return self._loaded_components[name].ready()
 
     def _install_hooks(self, context, hooked_methods):
         #Add All the hooks to the right place
@@ -242,6 +256,10 @@ class ComponentManager(object):
         for name, member in inspect.getmembers(component_ns):
             #Find Classes marked for loading
             if inspect.isclass(member) and hasattr(member, class_marker):
+                #Handle Requirements
+                if hasattr(member, '__requires__'):
+                    for req in member.__requires__:
+                        self._require(req)
                 obj = member(context, config)
                 #Save the context for this obj if the class_marker is a str
                 context_name = getattr(obj, class_marker)
@@ -275,4 +293,4 @@ class ComponentManager(object):
                                                          component_ns, config,
                                                          context)
         self._install_hooks(context, annotated_calls)
-        self._loaded_components[name] = component_ns
+        return component_ns

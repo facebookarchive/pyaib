@@ -97,7 +97,7 @@ class ObjectStore(object):
         if '.' in name:
             importname = name
         else:
-            importname = 'db.%s' % name
+            importname = 'dbd.%s' % name
         basename = name.split('.').pop()
         driver_ns = __import__(importname, globals(), locals(), ['*'], -1)
         for name, cls in inspect.getmembers(driver_ns, inspect.isclass):
