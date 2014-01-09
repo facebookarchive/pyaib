@@ -58,7 +58,7 @@ def jsonify(thing):
 
 
 def dejsonify(jsonstr):
-    return json.loadsa(jsonstr)
+    return json.loads(jsonstr)
 
 CLASS_MARKER = '_PYAIB_DB_DRIVER'
 
