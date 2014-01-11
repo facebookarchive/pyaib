@@ -25,6 +25,7 @@ class Channels(object):
     def __init__(self, irc_c, config):
         self.channels = set()
         self.config = config
+        self.db = None
         print("Channel Management Loaded")
 
     #Provide a little bit of magic
@@ -35,6 +36,18 @@ class Channels(object):
     def _autojoin(self, irc_c):
         self.channels.clear()
         if self.config.autojoin:
+            if isinstance(self.config.autojoin, basestring):
+                self.config.autojoin = self.config.autojoin.split(',')
+            if self.config.db and irc_c.db:
+                print("Loading Channels from DB")
+                self.db = irc_c.db.get('channels', 'autojoin')
+                if self.db.value:
+                    merge = list(set(self.db.value + self.config.autojoin))
+                    self.config.autojoin = merge
+                else:
+                    self.db.value = []
+                self.db.value = sorted(self.config.autojoin)
+                self.db.commit()
             print("Channels Auto Joining: %r" % self.config.autojoin)
             irc_c.JOIN(self.config.autojoin)
 
@@ -42,7 +55,12 @@ class Channels(object):
     def _join(self, irc_c, msg):
         #Only Our Joins
         if msg.nick.lower() == irc_c.botnick.lower():
-            self.channels.add(msg.args.strip().lower())
+            channel = msg.args.strip().lower()
+            self.channels.add(channel)
+            if self.db and channel not in self.db.value:
+                self.db.value.append(channel)
+                self.db.value.sort()
+                self.db.commit()
 
     @observes('IRC_MSG_PART')
     def _part(self, irc_c, msg):
@@ -50,6 +68,10 @@ class Channels(object):
         #Only Our Parts
         if msg.nick.lower() == irc_c.botnick.lower():
             self.channels.remove(channel.lower())
+            if self.db and channel.lower() in self.db.value:
+                self.db.value.remove(channel.lower())
+                self.db.value.sort()
+                self.db.commit()
 
     @observes('IRC_MSG_KICK')
     def _kick(self, irc_c, msg):

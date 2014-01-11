@@ -45,6 +45,8 @@ import inspect
 
 from .components import component_class
 
+CLASS_MARKER = '_PYAIB_DB_DRIVER'
+
 
 def sha256(msg):
     """ return the hex digest for a givent msg """
@@ -59,8 +61,6 @@ def jsonify(thing):
 
 def dejsonify(jsonstr):
     return json.loads(jsonstr)
-
-CLASS_MARKER = '_PYAIB_DB_DRIVER'
 
 
 def db_driver(cls):
@@ -111,6 +111,8 @@ class ObjectStore(object):
     #Define easy data access methods
     def get(self, bucket, key=None):
         """Get a Bucket or if key is provided get a Item from the db"""
+        if key is None:
+            return Bucket(self, bucket)
         key, payload = self._driver.getObject(key, bucket)
         return Item(self._driver, bucket, key, payload)
 
@@ -146,6 +148,11 @@ class Item(object):
         self.bucket = bucket
         self.key = key
         self.value = payload
+
+    def reload(self):
+        self.key, self.value = self._driver.getObject(self._meta['key'],
+                                                      self._meta['bucket'])
+        self.bucket = self._meta['bucket']
 
     def delete(self):
         self._driver.deleteObject(self.key, self.bucket)
