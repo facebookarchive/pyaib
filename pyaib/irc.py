@@ -234,18 +234,28 @@ class Client(object):
 class Message (object):
     """Parse raw irc text into easy to use class"""
 
-    #TODO: Think of a way for plugins / components to hook into message
-    # parsing to handle special messages like DCC or CTCP with out bloating
-    # This class to extream lengths
+    MSG_REGEX = re.compile(r'^(?::([^ ]+) )?([^ ]+) (.+)$')
+    DIRECT_REGEX = re.compile(r'^([^ ]+) :?(.+)$')
 
     #Some Message prefixes for channel prefixes
     PREFIX_OP = 1
     PREFIX_HALFOP = 2
     PREFIX_VOICE = 3
 
+    # Place to store parsers for complex message types
+    _parsers = {}
+
+    @classmethod
+    def add_parser(cls, kind, handler):
+        cls._parsers[kind] = handler
+
+    @classmethod
+    def get_parser(cls, kind):
+        return cls._parsers.get(kind)
+
     def __init__(self, irc_c, raw):
         self.raw = raw
-        match = re.search(r'^(?::([^ ]+) )?([^ ]+) (.+)$', raw)
+        match = Message.MSG_REGEX.search(raw)
         if match is None:
             return self.__error_out('IRC Message')
 
@@ -259,13 +269,13 @@ class Message (object):
         self.timestamp = time.time()
 
         #Handle more message types
-        if self.kind in ['PRIVMSG', 'NOTICE', 'INVITE']:
-            self.__directed_message(irc_c)
+        if self.kind in Message._parsers:
+            Message._parsers[self.kind](self, irc_c)
 
         #Be nice strip off the leading : on args
         self.args = re.sub(r'^:', '', self.args)
 
-    def __error_out(self, text):
+    def _error_out(self, text):
         print('BAD %s: %s' % (text, self.raw))
         self.kind = None
 
@@ -281,34 +291,40 @@ class Message (object):
     def __getattr__(self, key):
         return None
 
-    def __directed_message(self, irc_c):
-        match = re.search(r'^([^ ]+) :?(.+)$', self.args)
+    @staticmethod
+    def _directed_message(msg, irc_c):
+        match = Message.DIRECT_REGEX.search(msg.args)
         if match is None:
-            return self.__error_out('PRIVMSG')
-        self.target = match.group(1).lower()
-        self.message = match.group(2)
+            return msg._error_out('PRIVMSG')
+        msg.target = match.group(1).lower()
+        msg.message = match.group(2)
 
         #If the target is not the bot its a channel message
-        if self.target != irc_c.botnick:
-            self.reply_target = self.target
+        if msg.target != irc_c.botnick:
+            msg.reply_target = msg.target
             #Strip off any message prefixes
-            self.raw_channel = self.target.lstrip('@%+')
-            self.channel = self.raw_channel.lower()  # Normalized to lowercase
+            msg.raw_channel = msg.target.lstrip('@%+')
+            msg.channel = msg.raw_channel.lower()  # Normalized to lowercase
             #Record the perfix
-            if self.target.startswith('@'):
-                self.channel_prefix = self.PREFIX_OP
-            elif self.target.startswith('%'):
-                self.channel_prefix = self.PREFIX_HALFOP
-            elif self.target.startswith('+'):
-                self.channel_prefix = self.PREFIX_VOICE
+            if msg.target.startswith('@'):
+                msg.channel_prefix = msg.PREFIX_OP
+            elif msg.target.startswith('%'):
+                msg.channel_prefix = msg.PREFIX_HALFOP
+            elif msg.target.startswith('+'):
+                msg.channel_prefix = msg.PREFIX_VOICE
         else:
-            self.reply_target = self.nick
+            msg.reply_target = msg.nick
 
         #Setup a reply method
-        def __reply(msg):
-            irc_c.PRIVMSG(self.reply_target, msg)
-        self.reply = __reply
+        def __reply(text):
+            irc_c.PRIVMSG(msg.reply_target, text)
+        msg.reply = __reply
 
+
+#Install some common parsers
+Message.add_parser('PRIVMSG', Message._directed_message)
+Message.add_parser('NOTICE', Message._directed_message)
+Message.add_parser('INVITE', Message._directed_message)
 
 class Sender(unicode):
     """all the logic one would need for understanding sender part of irc msg"""

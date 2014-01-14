@@ -24,7 +24,7 @@ from pyaib import __version__
 
 setup(name='pyaib',
       version=__version__,
-      packages=['pyaib', 'pyaib.db', 'pyaib.util'],
+      packages=['pyaib', 'pyaib.dbd', 'pyaib.util'],
       url='http://github.com/facebook/pyaib',
       license='Apache 2.0',
       author='Jason Fried, Facebook',
