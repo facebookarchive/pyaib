@@ -257,7 +257,7 @@ class Message (object):
         self.raw = raw
         match = Message.MSG_REGEX.search(raw)
         if match is None:
-            return self.__error_out('IRC Message')
+            self._error_out('IRC Message')
 
         #If the prefix is blank its the server
         self.sender = Sender(match.group(1) or irc_c.server)
