@@ -290,6 +290,8 @@ class ComponentManager(object):
                 Message.add_parser(name, _chain_after)
             else:
                 Message.add_parser(name, method)
+        else:
+            Message.add_parser(name, method)
 
     def _find_annotated_callables(self, class_marker, component_ns, config,
                                   context):

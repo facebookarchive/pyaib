@@ -58,7 +58,9 @@ class Context(data.Object):
     # Set our nick
     def NICK(self, nick):
         self.RAW('NICK %s' % nick)
-        self.botnick = nick
+        if not self.registered:
+            #Assume we get the nick we want during registration
+            self.botnick = nick
 
     #privmsg
     def PRIVMSG(self, target, msg):
@@ -194,6 +196,7 @@ class Client(object):
 
         #On the socket connecting we should attempt to register
         def REGISTER(irc_c):
+            irc_c.registered = False
             if options.password:  # Use a password if one is issued
                 #TODO allow password to be associated with server url
                 irc_c.RAW('PASS %s' % options.password)
@@ -206,14 +209,24 @@ class Client(object):
         #Trigger an IRC_ONCONNECT event on 001 msg's
         def ONCONNECT(irc_c, msg):
             irc_c.server = msg.sender
+            irc_c.registered = True
             irc_c.events('IRC_ONCONNECT')(irc_c)
         events('IRC_MSG_001').observe(ONCONNECT)
 
         def NICK_INUSE(irc_c, msg):
-            irc_c.NICK('%s_' % irc_c.botnick)
+            if not irc_c.registered:
+                irc_c.NICK('%s_' % irc_c.botnick)
+            _, nick, _ = msg.args.split(' ', 2)
             #Fire event for other modules [if its watched]
-            irc_c.events['IRC_NICK_INUSE'](irc_c)
+            irc_c.events['IRC_NICK_INUSE'](irc_c, nick)
         events('IRC_MSG_433').observe(NICK_INUSE)
+
+        #When we change nicks handle botnick updates
+        def NICK(irc_c, msg):
+            if msg.nick.lower() == irc_c.botnick.lower():
+                irc_c.botnick = msg.args
+            irc_c.events['IRC_NICK_CHANGE'](irc_c, msg.nick, msg.args)
+        events('IRC_MSG_NICK').observe(NICK)
 
     #Parse Server Records
     # (ssl:)?host(:port)? // after ssl: is optional

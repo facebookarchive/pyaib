@@ -18,9 +18,12 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 from pyaib.ircbot import IrcBot
+import sys
+
+argv = sys.argv[1:]
 
 #Load 'botbot.conf' from the par
-bot = IrcBot('botbot.conf')
+bot = IrcBot(argv[0] if argv else 'botbot.conf')
 
 print("Config Dump: %s" % bot.config)
 

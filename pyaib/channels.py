@@ -16,7 +16,8 @@
 
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
-from .components import component_class, observes
+import re
+from .components import component_class, observes, msg_parser
 
 
 @component_class('channels')
@@ -51,30 +52,44 @@ class Channels(object):
             print("Channels Auto Joining: %r" % self.config.autojoin)
             irc_c.JOIN(self.config.autojoin)
 
+    @msg_parser('JOIN')
+    def _join_parser(self, msg, irc_c):
+        msg.raw_channel = re.sub(r'^:', '', msg.args.strip())
+        msg.channel = msg.raw_channel.lower()
+
+    @msg_parser('PART')
+    def _part_parser(self, msg, irc_c):
+        msg.raw_channel, _, message = msg.args.strip().partition(' ')
+        msg.channel = msg.raw_channel.lower()
+        msg.message = re.sub(r'^:', '', message)
+
+    @msg_parser('KICK')
+    def _kick_parser(self, msg, irc_c):
+        msg.raw_channel, msg.victim, message = msg.args.split(' ', 2)
+        msg.channel = msg.raw_channel.lower()
+        msg.message = re.sub(r'^:', '', message)
+
     @observes('IRC_MSG_JOIN')
     def _join(self, irc_c, msg):
         #Only Our Joins
         if msg.nick.lower() == irc_c.botnick.lower():
-            channel = msg.args.strip().lower()
-            self.channels.add(channel)
-            if self.db and channel not in self.db.value:
-                self.db.value.append(channel)
+            self.channels.add(msg.channel)
+            if self.db and msg.channel not in self.db.value:
+                self.db.value.append(msg.channel)
                 self.db.value.sort()
                 self.db.commit()
 
     @observes('IRC_MSG_PART')
     def _part(self, irc_c, msg):
-        channel, _, part_msg = msg.args.strip().partition(' ')
         #Only Our Parts
         if msg.nick.lower() == irc_c.botnick.lower():
-            self.channels.remove(channel.lower())
-            if self.db and channel.lower() in self.db.value:
-                self.db.value.remove(channel.lower())
+            self.channels.remove(msg.channel)
+            if self.db and msg.channel in self.db.value:
+                self.db.value.remove(msg.channel)
                 self.db.value.sort()
                 self.db.commit()
 
     @observes('IRC_MSG_KICK')
     def _kick(self, irc_c, msg):
-        channel, nick, rmessage = msg.args.split(' ', 2)
-        if irc_c.botnick.lower() == nick.lower():  # Case Insensitive match
-            self.channels.remove(channel.lower())
+        if irc_c.botnick.lower() == msg.victim.lower():
+            self.channels.remove(msg.channel)
