@@ -24,8 +24,10 @@ from gevent.event import AsyncResult
 import gevent
 
 from .util.decorator import EasyDecorator
+from .irc import Message
 
 __all__ = ['component_class',
+           'msg_parser',
            'watches', 'observe', 'observes', 'handle', 'handles',
            'every',
            'triggers_on', 'keyword', 'keywords', 'trigger', 'triggers',
@@ -71,6 +73,22 @@ def _get_plugs(method, kind):
         raise RuntimeError('Multiple Hook Types on a single method (%s)' %
                            method.__name__)
     return method.__plugs__[1]
+
+
+def msg_parser(*kinds, **kwargs):
+    """
+    Defines that his method is an message type parser
+    @param kinds: List of IRC message types/numerics
+    @param kwargs: Accepts chain keyword, True or 'after' executes this after
+        the existing parser. 'before' execute before existing parsers.
+        default is to replace the existing parser
+    """
+    chain = kwargs.pop('chain', False)
+    def wrapper(func):
+        parsers = _get_plugs(func, 'parsers')
+        parsers.extend([(kind, chain) for kind in kinds])
+        return func
+    return wrapper
 
 
 def watches(*events):
@@ -249,6 +267,29 @@ class ComponentManager(object):
             elif kind == 'timers':
                 for name, seconds in args:
                     context.timers.set(name, method, every=seconds)
+            elif kind == 'parsers':
+                for name, chain in args:
+                    self._add_parsers(method, name, chain)
+
+    def _add_parsers(self, method, name, chain):
+        """ Handle Message parser adding and chaining """
+        if chain:
+            existing = Message.get_parser(name)
+
+            def _chain_after(msg, irc_c):
+                existing(msg, irc_c)
+                method(msg, irc_c)
+
+            def _chain_before(msg, irc_c):
+                method(msg, irc_c)
+                existing(msg, irc_c)
+
+            if existing and chain == 'before':
+                Message.add_parser(name, _chain_before)
+            elif existing:
+                Message.add_parser(name, _chain_after)
+            else:
+                Message.add_parser(name, method)
 
     def _find_annotated_callables(self, class_marker, component_ns, config,
                                   context):
