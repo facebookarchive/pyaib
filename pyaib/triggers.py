@@ -70,18 +70,23 @@ class Triggers(Events):
                     messages.append([word])
         return messages
 
+    def _clean_doc(self, doc):
+        """ Cleanup Multi-line Doc Strings """
+        return ' '.join([s.strip() for s in doc.strip().split('\n')])
+
     def _generate_long_help(self, commands, msg):
         for k in sorted(commands):
             event_handler = self.get(k)
             if event_handler:
                 for observer in event_handler.observers():
                     if observer.__doc__:
+                        doc = self._clean_doc(observer.__doc__)
                         if hasattr(observer, '_subs'):
                             for sub in observer._subs:
                                 msg.reply("%s %s %s"
-                                          % (k, sub, observer.__doc__))
+                                          % (k, sub, doc))
                         else:
-                            msg.reply("%s %s" % (k, observer.__doc__))
+                            msg.reply("%s %s" % (k, doc))
 
     @keyword('help')
     @keyword.autohelp
