@@ -24,8 +24,6 @@ Must support the following methods, object is a dict or list or mixture
 [key(plain text), payload] should be the return value for operations that
 return objects
 
-Future Built in Indexing may be supported by specialized buckets
-
 Driver Methods:
 
 getObject(key=, bucket=)
@@ -34,7 +32,6 @@ updateObject(object, key=, bucket=)
 updateObjectKey(bucket=, oldkey=, newkey=)
 updateObjectBucket(key=, oldbucket=, newbucket=)
 getAllObjects(bucket=)  (iter)
-search(bucket=, terms=({key: value},), match=[any|all]) (iter)
 deleteObject(key=, bucket=) #One at a time for safety
 """
 from __future__ import (absolute_import, division, print_function,
@@ -42,6 +39,7 @@ from __future__ import (absolute_import, division, print_function,
 import hashlib
 import json
 import inspect
+from importlib import import_module
 
 from .components import component_class
 
@@ -69,11 +67,6 @@ def db_driver(cls):
     return cls
 
 
-class Match(object):
-    Any = 0
-    All = 1
-
-
 @component_class('db')
 class ObjectStore(object):
     """ Generic Key Value Store """
@@ -97,9 +90,9 @@ class ObjectStore(object):
         if '.' in name:
             importname = name
         else:
-            importname = 'dbd.%s' % name
+            importname = 'pyaib.dbd.%s' % name
         basename = name.split('.').pop()
-        driver_ns = __import__(importname, globals(), locals(), ['*'], -1)
+        driver_ns = import_module(importname)
         for name, cls in inspect.getmembers(driver_ns, inspect.isclass):
             if hasattr(cls, CLASS_MARKER):
                 #Load up the driver
@@ -125,13 +118,6 @@ class ObjectStore(object):
         """Store an object in the db by bucket and key, return an Item"""
         self._driver.setObject(obj, key, bucket)
         return Item(self._driver, bucket, key, obj)
-
-    def find(self, bucket, terms=[], match=Match.Any):
-        """Simple Expensive Search via key: value lists"""
-        for key, payload in self._driver.search(bucket, terms, match):
-            yield Item(self._driver, bucket, key, payload)
-
-    search = find
 
     def delete(self, bucket, key):
         """Delete an object in the store"""
@@ -200,6 +186,3 @@ class Bucket(object):
 
     def delete(self, key):
         return self._db.delete(self._bucket, key)
-
-    def find(self, terms=[], match=Match.Any):
-        return self._db.find(self._bucket, terms, match)
