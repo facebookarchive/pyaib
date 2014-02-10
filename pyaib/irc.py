@@ -18,6 +18,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import re
 import sys
+from textwrap import wrap
 import traceback
 import time
 
@@ -28,6 +29,8 @@ from .util import data
 from .util.decorator import raise_exceptions
 from . import __version__ as pyaib_version
 
+MAX_LENGTH = 510
+
 #Class for storing irc related information
 class Context(data.Object):
     """Dummy Object to hold irc data and send messages"""
@@ -35,7 +38,6 @@ class Context(data.Object):
     # TODO: MOVE irc commands into component and under irc_c.cmd
 
     # Raw IRC Message
-    # TODO: Add irc message length limit handling
     def RAW(self, message):
         try:
             #Join up the message parts
@@ -62,17 +64,35 @@ class Context(data.Object):
             #Assume we get the nick we want during registration
             self.botnick = nick
 
-    #privmsg
+    #privmsg with max line handling
     def PRIVMSG(self, target, msg):
-        if isinstance(msg, basestring):
-            self.RAW('PRIVMSG %s :%s' % (target, msg))
-        else:
-            self.RAW('PRIVMSG %s :%s' % (target, unicode(msg)))
+        if isinstance(msg, (list, tuple, set)):
+            msg = ' '.join(msg)
+        privmsg = 'PRIVMSG %s :%s'
+        # + 2 because of leading : and space after nickmask
+        prefix_length = len(self.botsender.raw) + 2 + len(privmsg %
+                                                          (target, ''))
+        for line in wrap(msg, MAX_LENGTH - prefix_length):
+            self.RAW(privmsg % (target, line))
 
     def JOIN(self, channels):
-        if isinstance(channels, list):
-            channels = ','.join(channels)
-        self.RAW('JOIN %s' % channels)
+        if isinstance(channels, (list, set, tuple)):
+            channels = list(channels)
+        else:
+            channels = [channels]
+
+        join = 'JOIN '
+        msg = join
+
+        #Build up join messages (wrap won't work)
+        while channels:
+            channel = channels.pop() + ','
+            if len(msg + channel) > MAX_LENGTH:
+                self.RAW(msg.rstrip(','))
+                msg = join
+            msg += channel
+
+        self.RAW(msg.rstrip(','))
 
     def PART(self, channels, message=None):
         if isinstance(channels, list):
@@ -113,6 +133,10 @@ class Client(object):
                 #Parse the RAW message
                 msg = Message(irc_c, raw)
                 if msg:  # This is a valid message
+                    #So we can do length calculations for PRIVMSG WRAPS
+                    if (msg.nick == irc_c.botnick
+                            and irc_c.botsender != msg.sender):
+                        irc_c.botsender = msg.sender
                     #Event for kind of message [if exists]
                     eventKey = 'IRC_MSG_%s' % msg.kind
                     irc_c.events[eventKey](irc_c, msg)
