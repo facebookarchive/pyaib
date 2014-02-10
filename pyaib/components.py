@@ -77,7 +77,7 @@ def _get_plugs(method, kind):
 
 def msg_parser(*kinds, **kwargs):
     """
-    Defines that his method is an message type parser
+    Defines that this method is a message type parser
     @param kinds: List of IRC message types/numerics
     @param kwargs: Accepts chain keyword, True or 'after' executes this after
         the existing parser. 'before' execute before existing parsers.
