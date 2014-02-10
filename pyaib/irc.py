@@ -69,6 +69,7 @@ class Context(data.Object):
         if isinstance(msg, (list, tuple, set)):
             msg = ' '.join(msg)
         privmsg = 'PRIVMSG %s :%s'
+        # length of self.botsender.raw is 0 when not set :P
         # + 2 because of leading : and space after nickmask
         prefix_length = len(self.botsender.raw) + 2 + len(privmsg %
                                                           (target, ''))
