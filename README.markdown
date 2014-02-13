@@ -10,6 +10,7 @@ Features
 * YAML config
 * plugin system
 * simple nickserv auth
+* simple abstract database system
 
 Setup
 =====
@@ -28,3 +29,5 @@ Run:
 <pre><code>python example/botbot.py</code></pre>
 
 Try adding your own plugins in example/plugins.
+
+Take a look at the [wiki](https://github.com/facebook/pyaib/wiki) for information about plugin writing and using the db component. 
