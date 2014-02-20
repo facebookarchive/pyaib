@@ -210,10 +210,10 @@ keyword = keywords = trigger = triggers = triggers_on
 
 class ComponentManager(object):
     """ Manage and Load all pyaib Components """
+    _loaded_components = collections.defaultdict(AsyncResult)
 
     def __init__(self, context, config):
         """ Needs a irc context and its config """
-        self._loaded_components = collections.defaultdict(AsyncResult)
         self.context = context
         self.config = config
 
