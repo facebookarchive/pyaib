@@ -151,6 +151,12 @@ class triggers_on(object):
                 return
             return dec.call(irc_c, msg, trigger, args, kargs)
 
+    class private_or_channel(channel):
+        """Allow either private or specified channel"""
+        def __init__(dec, *args, **kwargs):
+            kwargs['private'] = True
+            super(private_or_channel, dec).__init__(*args, **kwargs)
+
     class private(EasyDecorator):
         """Only pass if triggers is from message not in a channel"""
         def wrapper(dec, irc_c, msg, trigger, args, kargs):
