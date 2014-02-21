@@ -166,13 +166,15 @@ class triggers_on(object):
     class helponly(EasyDecorator):
         """Only provide help"""
         def wrapper(dec, irc_c, msg, trigger, args, kargs):
-            msg.reply('%s %s' % (trigger, dec.__doc__))
+            msg.reply('%s %s' % (trigger,
+                                 irc_c.triggers._clean_doc(dec.__doc__)))
 
     class autohelp(EasyDecorator):
         """Make --help trigger help"""
         def wrapper(dec, irc_c, msg, trigger, args, kargs):
             if 'help' in kargs or (args and args[0] == 'help'):
-                msg.reply('%s %s' % (trigger, dec.__doc__))
+                msg.reply('%s %s' % (trigger,
+                                     irc_c.triggers._clean_doc(dec.__doc__)))
             else:
                 dec.call(irc_c, msg, trigger, args, kargs)
 
@@ -182,7 +184,8 @@ class triggers_on(object):
         def wrapper(dec, irc_c, msg, trigger, args, kargs):
             if (not args and not kargs) or 'help' in kargs or (
                     args and args[0] == 'help'):
-                msg.reply('%s %s' % (trigger, dec.__doc__))
+                msg.reply('%s %s' % (trigger,
+                                     irc_c.triggers._clean_doc(dec.__doc__)))
             else:
                 return dec.call(irc_c, msg, trigger, args, kargs)
 
