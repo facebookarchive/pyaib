@@ -147,7 +147,9 @@ class triggers_on(object):
                         return
                 elif dec.args and msg.channel not in dec.args:
                     return
-                return dec.call(irc_c, msg, trigger, args, kargs)
+            elif not dec.kwargs.get('private'):
+                return
+            return dec.call(irc_c, msg, trigger, args, kargs)
 
     class private(EasyDecorator):
         """Only pass if triggers is from message not in a channel"""
