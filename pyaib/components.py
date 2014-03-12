@@ -104,6 +104,25 @@ handle = watches
 handles = watches
 
 
+class _Ignore(EasyDecorator):
+    """Only pass if triggers is from user not ignored"""
+    def wrapper(dec, irc_c, msg, *args):
+        if dec.args and dec.kwargs.get('runtime'):
+            for attr in dec.args:
+                if hasattr(dec._instance, attr):
+                    ignore_nicks = getattr(dec._instance, attr)
+                    if isinstance(ignore_nicks, basestring)\
+                            and msg.sender.nick() == ignore_nicks:
+                        return
+                    elif isinstance(ignore_nicks, collections.Container)\
+                            and msg.sender.nick() in ignore_nicks:
+                        return
+        elif dec.args and msg.sender.nick() in dec.args:
+            return
+        return dec.call(irc_c, msg, *args)
+watches.ignore = _Ignore
+
+
 def every(seconds, name=None):
     """ Define a timer to execute every interval """
     def wrapper(func):
@@ -217,6 +236,7 @@ class triggers_on(object):
     nosubs = nosub
 
 keyword = keywords = trigger = triggers = triggers_on
+triggers.ignore = _Ignore
 
 
 class ComponentManager(object):
