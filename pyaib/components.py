@@ -134,10 +134,10 @@ class _Channel(EasyDecorator):
                     if hasattr(dec._instance, attr):
                         channel = getattr(dec._instance, attr)
                         if isinstance(channel, basestring)\
-                                and msg.channel.lower() == channel:
+                                and msg.channel == channel:
                             return
                         elif isinstance(channel, collections.Container)\
-                                and msg.channel.lower() in channel:
+                                and msg.channel in channel:
                             return
             elif dec.args and msg.channel not in dec.args:
                 return
