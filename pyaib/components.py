@@ -123,6 +123,28 @@ class _Ignore(EasyDecorator):
 watches.ignore = _Ignore
 
 
+class _Channel(EasyDecorator):
+    """Ignore triggers not in channels, or optionally a list of channels"""
+    def wrapper(dec, irc_c, msg, *args):
+        if msg.channel:
+            #Did they want to restrict which channels
+            #Should we lookup allowed channels at run time
+            if dec.args and dec.kwargs.get('runtime'):
+                for attr in dec.args:
+                    if hasattr(dec._instance, attr):
+                        channel = getattr(dec._instance, attr)
+                        if isinstance(channel, basestring)\
+                                and msg.channel.lower() == channel:
+                            return
+                        elif isinstance(channel, collections.Container)\
+                                and msg.channel.lower() in channel:
+                            return
+            elif dec.args and msg.channel not in dec.args:
+                return
+            return dec.call(irc_c, msg, *args)
+watches.channel = _Channel
+
+
 def every(seconds, name=None):
     """ Define a timer to execute every interval """
     def wrapper(func):
@@ -237,6 +259,7 @@ class triggers_on(object):
 
 keyword = keywords = trigger = triggers = triggers_on
 triggers.ignore = _Ignore
+triggers.channel = _Channel
 
 
 class ComponentManager(object):
