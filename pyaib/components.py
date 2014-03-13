@@ -131,14 +131,17 @@ class _Channel(EasyDecorator):
             #Should we lookup allowed channels at run time
             if dec.args and dec.kwargs.get('runtime'):
                 for attr in dec.args:
+                    ok = False
                     if hasattr(dec._instance, attr):
                         channel = getattr(dec._instance, attr)
                         if isinstance(channel, basestring)\
                                 and msg.channel == channel:
-                            return
+                            ok = True
                         elif isinstance(channel, collections.Container)\
                                 and msg.channel in channel:
-                            return
+                            ok = True
+                if not ok:
+                    return
             elif dec.args and msg.channel not in dec.args:
                 return
             return dec.call(irc_c, msg, *args)
