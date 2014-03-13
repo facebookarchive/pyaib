@@ -112,12 +112,12 @@ class _Ignore(EasyDecorator):
                 if hasattr(dec._instance, attr):
                     ignore_nicks = getattr(dec._instance, attr)
                     if isinstance(ignore_nicks, basestring)\
-                            and msg.sender.nick() == ignore_nicks:
+                            and msg.sender.nick == ignore_nicks:
                         return
                     elif isinstance(ignore_nicks, collections.Container)\
-                            and msg.sender.nick() in ignore_nicks:
+                            and msg.sender.nick in ignore_nicks:
                         return
-        elif dec.args and msg.sender.nick() in dec.args:
+        elif dec.args and msg.sender.nick in dec.args:
             return
         return dec.call(irc_c, msg, *args)
 watches.ignore = _Ignore
