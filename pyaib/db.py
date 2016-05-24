@@ -48,6 +48,8 @@ CLASS_MARKER = '_PYAIB_DB_DRIVER'
 
 def sha256(msg):
     """ return the hex digest for a givent msg """
+    if not isinstance(msg, bytes):
+        msg = msg.encode('utf-8')
     return hashlib.sha256(msg).hexdigest()
 
 hash = sha256

@@ -18,13 +18,18 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import inspect
 import collections
+import sys
 from importlib import import_module
+
 
 from gevent.event import AsyncResult
 import gevent
 
 from .util.decorator import EasyDecorator
 from .irc import Message
+
+if sys.version_info.major == 2:
+    str = unicode  # noqa
 
 __all__ = ['component_class',
            'msg_parser',
@@ -43,7 +48,7 @@ def component_class(cls):
         If they pass a string argument to the decorator use it as a context
         name for the instance
     """
-    if isinstance(cls, basestring):
+    if isinstance(cls, str):
         context = cls
 
         def wrapper(cls):
@@ -111,7 +116,7 @@ class _Ignore(EasyDecorator):
             for attr in dec.args:
                 if hasattr(dec._instance, attr):
                     ignore_nicks = getattr(dec._instance, attr)
-                    if isinstance(ignore_nicks, basestring)\
+                    if isinstance(ignore_nicks, str)\
                             and msg.sender.nick == ignore_nicks:
                         return
                     elif isinstance(ignore_nicks, collections.Container)\
@@ -130,11 +135,11 @@ class _Channel(EasyDecorator):
             #Did they want to restrict which channels
             #Should we lookup allowed channels at run time
             if dec.args and dec.kwargs.get('runtime'):
+                ok = False
                 for attr in dec.args:
-                    ok = False
                     if hasattr(dec._instance, attr):
                         channel = getattr(dec._instance, attr)
-                        if isinstance(channel, basestring)\
+                        if isinstance(channel, str)\
                                 and msg.channel == channel:
                             ok = True
                         elif isinstance(channel, collections.Container)\
@@ -181,7 +186,7 @@ class triggers_on(object):
                     for attr in dec.args:
                         if hasattr(dec._instance, attr):
                             channel = getattr(dec._instance, attr)
-                            if isinstance(channel, basestring)\
+                            if isinstance(channel, str)\
                                     and msg.channel.lower() == channel:
                                 ok = True
                             elif isinstance(channel, collections.Container)\
@@ -238,7 +243,7 @@ class triggers_on(object):
         def __init__(dec, *words):
             dec._subs = words
             for word in words:
-                if not isinstance(word, basestring):
+                if not isinstance(word, str):
                     raise TypeError("sub word must be a string")
 
         def wrapper(dec, irc_c, msg, trigger, args, kargs):
@@ -363,7 +368,7 @@ class ComponentManager(object):
                 obj = member(context, config)
                 #Save the context for this obj if the class_marker is a str
                 context_name = getattr(obj, class_marker)
-                if isinstance(context_name, basestring):
+                if isinstance(context_name, str):
                     context[context_name] = obj
                     #Search for hooked instance methods
                 for name, thing in inspect.getmembers(obj):

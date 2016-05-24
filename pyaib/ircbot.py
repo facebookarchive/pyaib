@@ -25,8 +25,10 @@ gevent.monkey.patch_all()
 
 #Screw you python, lets try this for unicode support
 import sys
-reload(sys)
-sys.setdefaultencoding('utf-8')
+if sys.version_info.major == 2:
+    import imp
+    imp.reload(sys)
+    sys.setdefaultencoding('utf-8')
 import signal
 import gevent
 

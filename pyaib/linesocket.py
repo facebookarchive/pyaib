@@ -90,7 +90,7 @@ class LineSocket(object):
 
                     #Set Keepalives
                     sock.setsockopt(socket.SOL_SOCKET, socket.SO_KEEPALIVE, 1)
-                except socket.error, msg:
+                except socket.error as msg:
                     print('Socket Error: %s' % msg)
                     sock = None
                     continue
@@ -101,7 +101,7 @@ class LineSocket(object):
                     try:
                         ctx = SSL.Context(SSL.SSLv23_METHOD)
                         sock = SSL.Connection(ctx, sock)
-                    except SSL.Error, err:
+                    except SSL.Error as err:
                         print('Could not Initiate SSL: %s' % err)
                         sock = None
                         continue
@@ -111,10 +111,13 @@ class LineSocket(object):
                     print('Trying Connect(%s)' % repr(sockaddr))
                     sock.settimeout(10)
                     sock.connect(sockaddr)
-                except socket.error, msg:
+                except socket.error as msg:
                     print('Socket Error: %s' % msg)
                     if self.SSL:
-                        sock.shutdown()
+                        try:
+                            sock.shutdown()
+                        except SSL.Error as e:
+                            print('Failed to shutdown SSL: %s' % e)
                     sock.close()
                     sock = None
                     continue
@@ -222,7 +225,8 @@ class LineSocket(object):
                         raise self.SocketError('Broken Pipe')
                     else:
                         raise self.SocketError('Err Socket Code: ' + e.errno)
-                except SSL.SysCallError as (errnum, errstr):
+                except SSL.SysCallError as e:
+                    (errnum, errstr) = e
                     if errnum == errno.EPIPE:
                         raise self.SocketError(errstr)
                     else:

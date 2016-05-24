@@ -17,7 +17,11 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import re
+import sys
 from .components import component_class, observes, msg_parser
+
+if sys.version_info.major == 2:
+    str = unicode  # noqa
 
 
 @component_class('channels')
@@ -37,7 +41,7 @@ class Channels(object):
     def _autojoin(self, irc_c):
         self.channels.clear()
         if self.config.autojoin:
-            if isinstance(self.config.autojoin, basestring):
+            if isinstance(self.config.autojoin, str):
                 self.config.autojoin = self.config.autojoin.split(',')
             if self.config.db and irc_c.db:
                 print("Loading Channels from DB")

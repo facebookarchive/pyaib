@@ -22,8 +22,8 @@ from collections import namedtuple
 # a namedtuple like that given by sys.version_info
 __version_info__ = namedtuple(
     'version_info',
-    'major minor micro releaselevel serial')(major=1,
-                                             minor=1,
+    'major minor micro releaselevel serial')(major=2,
+                                             minor=0,
                                              micro=0,
                                              releaselevel='final',
                                              serial=0)

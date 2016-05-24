@@ -17,11 +17,15 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import inspect
+import sys
 
 from .components import *
 
 #Use this as an indicator of a class to inspect later
 CLASS_MARKER = '_PYAIB_PLUGIN'
+
+if sys.version_info.major == 2:
+    str = unicode  # noqa
 
 
 def plugin_class(cls):
@@ -30,7 +34,7 @@ def plugin_class(cls):
         If they pass a string argument to the decorator use it as a context
         name for the instance
     """
-    if isinstance(cls, basestring):
+    if isinstance(cls, str):
         context = cls
 
         def wrapper(cls):

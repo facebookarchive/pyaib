@@ -17,6 +17,11 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 import weakref
+import sys
+
+
+if sys.version_info.major == 2:
+    str = unicode  # noqa
 
 
 class Raw(object):
@@ -81,7 +86,7 @@ class Object(dict):
     def __protect__(self, key, value=sentinel):
         """Protected keys add its parents, not sure if useful"""
         if not isinstance(key, list):
-            key = key.split('.') if isinstance(key, basestring) else [key]
+            key = key.split('.') if isinstance(key, str) else [key]
         key, path = key.pop(0), key
         if len(path) > 0:
             self.get(key).protect(path, value)
@@ -124,7 +129,7 @@ class Object(dict):
     #Dict like functionality and xpath like access
     def __getitem__(self, key, default=sentinel):
         if not isinstance(key, list):
-            key = key.split('.') if isinstance(key, basestring) else [key]
+            key = key.split('.') if isinstance(key, str) else [key]
         key, path = key.pop(0), key
         if len(path) > 0:
             return self.get(key).__getitem__(path, default)
@@ -144,9 +149,9 @@ class Object(dict):
     def __contains__(self, key):
         """ contains method with key paths support """
         if not isinstance(key, list):
-            key = key.split('.') if isinstance(key, basestring) else [key]
+            key = key.split('.') if isinstance(key, str) else [key]
         this, next = key.pop(0), key
-        if this in self.iterkeys():
+        if this in self.keys():
             if len(next) > 0:
                 return next in self.get(this)
             else:
@@ -164,7 +169,7 @@ class Object(dict):
     #Allow address keys 'key.key.key'
     def __setitem__(self, key, value):
         if not isinstance(key, list):
-            key = key.split('.') if isinstance(key, basestring) else [key]
+            key = key.split('.') if isinstance(key, str) else [key]
         key, path = key.pop(0), key
         if len(path) > 0:
             self.setdefault(key, {}).__setitem__(path, value)
@@ -176,7 +181,7 @@ class Object(dict):
     #Allow del by 'key.key.key'
     def __delitem__(self, key):
         if not isinstance(key, list):
-            key = key.split('.') if isinstance(key, basestring) else [key]
+            key = key.split('.') if isinstance(key, str) else [key]
         key, path = key.pop(0), key
         if len(path) > 0:
             self.get(key).__delitem__(path)  # Pass the delete down
@@ -196,21 +201,21 @@ class CaseInsensitiveObject(Object):
 
     def __getitem__(self, key, default=sentinel):
         if isinstance(key, list):
-            key = [x.lower() if isinstance(x, basestring) else x for x in key]
-        elif isinstance(key, basestring):
+            key = [x.lower() if isinstance(x, str) else x for x in key]
+        elif isinstance(key, str):
             key = key.lower()
         return Object.__getitem__(self, key, default)
     get = __getitem__
 
     def __setattr__(self, key, value):
-        if isinstance(key, basestring):
+        if isinstance(key, str):
             key = key.lower()
         return Object.__setattr__(self, key, value)
 
     def __contains__(self, key):
         if not isinstance(key, list):
-            key = key.split('.') if isinstance(key, basestring) else [key]
-        if isinstance(key[0], basestring):
+            key = key.split('.') if isinstance(key, str) else [key]
+        if isinstance(key[0], str):
             key[0] = key[0].lower()
         return Object.__contains__(self, key)
 
@@ -223,7 +228,7 @@ class CaseInsensitiveObject(Object):
             return Object.__getattr__(self, key)
 
     def __delattr__(self, key):
-        if isinstance(key, basestring):
+        if isinstance(key, str):
             key = key.lower()
         return Object.__delattr__(self, key)
 
@@ -238,7 +243,7 @@ class Collection(list):
         super(Collection, self).__init__(alist)
         self.__default = default
         #Makes sure all the conversions happen
-        for i in xrange(0, len(self)):
+        for i in range(0, len(self)):
             self[i] = self[i]
 
     def __wrap(self, value):

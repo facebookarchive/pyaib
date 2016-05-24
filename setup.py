@@ -34,11 +34,12 @@ setup(name='pyaib',
           'License :: OSI Approved :: Apache Software License',
           'Topic :: Communications :: Chat :: Internet Relay Chat',
           'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3.5',
           'Intended Audience :: Developers',
           'Development Status :: 5 - Production/Stable',
       ],
       install_requires=[
           'pyOpenSSL >= 0.12',
-          'gevent >= 1.0',
+          'gevent >= 1.1.0',
           'PyYAML >= 3.09',
       ])

@@ -15,7 +15,7 @@ from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
 import sqlite3
-from zlib import compress, decompress
+import zlib
 
 from pyaib.db import db_driver, hash
 
@@ -29,6 +29,15 @@ except ImportError:
     pass
 
 from pyaib.db import jsonify, dejsonify
+
+
+def compress(message):
+    if not isinstance(message, bytes):
+        message = message.encode('utf-8')
+    return zlib.compress(message)
+
+
+decompress = zlib.decompress
 
 
 @db_driver
@@ -84,7 +93,7 @@ class SqliteDriver(object):
             self._create_bucket(bucket)
         self.conn.execute("REPLACE INTO `{}` (key, value) VALUES (?, ?)"
                           .format(hash(bucket)),
-                          (key, buffer(compress(jsonify(obj)))))
+                          (key, memoryview(compress(jsonify(obj)))))
         self.conn.commit()
 
     def updateObject(self, obj, key, bucket):

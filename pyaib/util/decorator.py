@@ -21,6 +21,11 @@ import inspect
 import gevent
 import functools
 import copy
+import sys
+
+if sys.version_info.major == 2:
+    str = unicode  # noqa
+
 
 
 class EasyDecorator(object):
@@ -96,7 +101,7 @@ def filterintree(adict, block, stype=str, history=None):
         history.add(id(adict))
 
     if isinstance(adict, list):
-        for i in xrange(len(adict)):
+        for i in range(len(adict)):
             if isinstance(adict[i], stype):
                 adict[i] = block(adict[i])
             elif isinstance(adict[i], (set, tuple)):
@@ -108,7 +113,7 @@ def filterintree(adict, block, stype=str, history=None):
         filterintree(c, block, stype, history)
         return type(adict)(c)
     elif isinstance(adict, dict):
-        for k, v in adict.iteritems():
+        for k, v in adict.items():
             if isinstance(v, stype):
                 adict[k] = block(v)
             elif isinstance(v, (dict, list)):
@@ -123,8 +128,8 @@ class utf8Decode(EasyDecorator):
         def decode(s):
             return s.decode('utf-8', 'ignore')
 
-        args = filterintree(args, decode)
-        filterintree(kwargs, decode)
+        args = filterintree(args, decode, stype=bytes)
+        filterintree(kwargs, decode, stype=bytes)
         #Call Method with converted args
         return self.call(*args, **kwargs)
 
@@ -135,7 +140,7 @@ class utf8Decode(EasyDecorator):
                 return s.decode('utf-8', 'ignore')
 
             value = [self.call(*args, **kwargs)]
-            filterintree(value, decode)
+            filterintree(value, decode, stype=bytes)
             return value[0]
 
 
@@ -145,8 +150,8 @@ class utf8Encode(EasyDecorator):
         def encode(s):
             return s.encode('utf-8', 'backslashreplace')
 
-        args = filterintree(args, encode, stype=unicode)
-        filterintree(kwargs, encode, stype=unicode)
+        args = filterintree(args, encode, stype=str)
+        filterintree(kwargs, encode, stype=str)
         #Call Method with converted args
         return self.call(*args, **kwargs)
 
@@ -157,7 +162,7 @@ class utf8Encode(EasyDecorator):
                 return s.encode('utf-8', 'backslashreplace')
 
             value = [self.call(*args, **kwargs)]
-            filterintree(value, encode, stype=unicode)
+            filterintree(value, encode, stype=str)
             return value[0]
 
 

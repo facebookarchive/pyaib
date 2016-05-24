@@ -29,6 +29,9 @@ from .util import data
 from .util.decorator import raise_exceptions
 from . import __version__ as pyaib_version
 
+if sys.version_info.major == 2:
+    str = unicode  # noqa
+
 MAX_LENGTH = 510
 
 #Class for storing irc related information
@@ -365,17 +368,17 @@ Message.add_parser('NOTICE', Message._directed_message)
 Message.add_parser('INVITE', Message._directed_message)
 
 
-class Sender(unicode):
+class Sender(str):
     """all the logic one would need for understanding sender part of irc msg"""
     def __new__(cls, sender):
         #Pull out each of the pieces at instance time
         if '!' in sender:
             nick, _, usermask = sender.partition('!')
-            inst = unicode.__new__(cls, nick)
+            inst = str.__new__(cls, nick)
             inst._user, _, inst._hostname = usermask.partition('@')
             return inst
         else:
-            return unicode.__new__(cls, sender)
+            return str.__new__(cls, sender)
 
     @property
     def raw(self):
