@@ -67,7 +67,7 @@ class Context(data.Object):
             #Assume we get the nick we want during registration
             self.botnick = nick
 
-    #privmsg/notice with max line handling
+    # privmsg/notice with max line handling
     def PRIVMSG(self, target, msg):
         for line in self._wrap_command('PRIVMSG', target, msg):
             self.RAW(line)
@@ -79,13 +79,12 @@ class Context(data.Object):
     def _wrap_command(self, command, target, msg):
         if isinstance(msg, (list, tuple, set)):
             msg = ' '.join(msg)
-        msgtemplate = '%s %%s :%%s' % command
+        msgtemplate = '%s %s :%%s' % (command, target)
         # length of self.botsender.raw is 0 when not set :P
         # + 2 because of leading : and space after nickmask
-        prefix_length = len(self.botsender.raw) + 2 + len(msgtemplate %
-                                                          (target, ''))
+        prefix_length = len(self.botsender.raw) + 2 + len(msgtemplate % '')
         for line in wrap(msg, MAX_LENGTH - prefix_length):
-            yield msgtemplate % (target, line)
+            yield msgtemplate % line
 
     def JOIN(self, channels):
         if isinstance(channels, (list, set, tuple)):
@@ -96,7 +95,7 @@ class Context(data.Object):
         join = 'JOIN '
         msg = join
 
-        #Build up join messages (wrap won't work)
+        # Build up join messages (wrap won't work)
         while channels:
             channel = channels.pop() + ','
             if len(msg + channel) > MAX_LENGTH:
@@ -125,8 +124,8 @@ class Client(object):
         self.reconnect = True
         self.__register_client_hooks(self.config)
 
-    #The IRC client Event Loop
-    #Call events for every irc message
+    # The IRC client Event Loop
+    # Call events for every irc message
     def _try_connect(self):
         for server in self.servers:
             host, port, ssl = self.__parseserver(server)

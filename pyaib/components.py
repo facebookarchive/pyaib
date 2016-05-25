@@ -179,8 +179,8 @@ class triggers_on(object):
         """Ignore triggers not in channels, or optionally a list of channels"""
         def wrapper(dec, irc_c, msg, trigger, args, kargs):
             if msg.channel:
-                #Did they want to restrict which channels
-                #Should we lookup allowed channels at run time
+                # Did they want to restrict which channels
+                # Should we lookup allowed channels at run time
                 if dec.args and dec.kwargs.get('runtime'):
                     ok = False
                     for attr in dec.args:
@@ -204,7 +204,7 @@ class triggers_on(object):
         """Allow either private or specified channel"""
         def __init__(dec, *args, **kwargs):
             kwargs['private'] = True
-            super(private_or_channel, dec).__init__(*args, **kwargs)
+            super(triggers_on.private_or_channel, dec).__init__(*args, **kwargs)
 
     class private(EasyDecorator):
         """Only pass if triggers is from message not in a channel"""
