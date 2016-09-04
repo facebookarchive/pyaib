@@ -91,9 +91,17 @@ class SqliteDriver(object):
     def setObject(self, obj, key, bucket):
         if not self._bucket_exists(bucket):
             self._create_bucket(bucket)
+
+        blob = memoryview(compress(jsonify(obj)))
+
+        try:
+            blob = buffer(blob.tobytes())
+        except NameError:
+            pass
+
         self.conn.execute("REPLACE INTO `{}` (key, value) VALUES (?, ?)"
                           .format(hash(bucket)),
-                          (key, memoryview(compress(jsonify(obj)))))
+                          (key, blob))
         self.conn.commit()
 
     def updateObject(self, obj, key, bucket):
