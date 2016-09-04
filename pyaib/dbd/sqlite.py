@@ -14,6 +14,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+from sys import version_info
 import sqlite3
 import zlib
 
@@ -92,12 +93,9 @@ class SqliteDriver(object):
         if not self._bucket_exists(bucket):
             self._create_bucket(bucket)
 
-        blob = memoryview(compress(jsonify(obj)))
-
-        try:
-            blob = buffer(blob.tobytes())
-        except NameError:
-            pass
+        blob = compress(jsonify(obj))
+        if version_info.major == 2:
+            blob = buffer(memoryview(blob).tobytes())
 
         self.conn.execute("REPLACE INTO `{}` (key, value) VALUES (?, ?)"
                           .format(hash(bucket)),
