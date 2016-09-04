@@ -36,8 +36,8 @@ def compress(message):
         message = message.encode('utf-8')
     return zlib.compress(message)
 
-
-decompress = zlib.decompress
+def decompress(blob):
+    return zlib.decompress(blob).decode('utf-8')
 
 
 @db_driver
