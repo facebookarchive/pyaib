@@ -63,7 +63,7 @@ class Object(dict):
         self.__dict__['__PROTECTED__'] = set()
         #Make sure all children are Object not dict
         #Also handle 'a.b.c' style keys
-        for k in self.keys():
+        for k in list(self.keys()):
             self[k] = self.pop(k)
 
     def __wrap(self, value):
