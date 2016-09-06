@@ -23,8 +23,8 @@ from collections import namedtuple
 __version_info__ = namedtuple(
     'version_info',
     'major minor micro releaselevel serial')(major=2,
-                                             minor=0,
-                                             micro=2,
+                                             minor=1,
+                                             micro=0,
                                              releaselevel='final',
                                              serial=0)
 
