@@ -14,6 +14,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
+from sys import version_info
 import sqlite3
 import zlib
 
@@ -36,8 +37,8 @@ def compress(message):
         message = message.encode('utf-8')
     return zlib.compress(message)
 
-
-decompress = zlib.decompress
+def decompress(blob):
+    return zlib.decompress(blob).decode('utf-8')
 
 
 @db_driver
@@ -91,9 +92,14 @@ class SqliteDriver(object):
     def setObject(self, obj, key, bucket):
         if not self._bucket_exists(bucket):
             self._create_bucket(bucket)
+
+        blob = compress(jsonify(obj))
+        if version_info.major == 2:
+            blob = buffer(memoryview(blob).tobytes())
+
         self.conn.execute("REPLACE INTO `{}` (key, value) VALUES (?, ?)"
                           .format(hash(bucket)),
-                          (key, memoryview(compress(jsonify(obj)))))
+                          (key, blob))
         self.conn.commit()
 
     def updateObject(self, obj, key, bucket):
