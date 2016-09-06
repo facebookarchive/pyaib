@@ -84,16 +84,18 @@ class SqliteDriver(object):
         row = c.fetchone()
         if row:
             k, v = row
-            return (k, dejsonify(decompress(v)))
+            return (k, dejsonify(decompress(v).decode('utf-8')))
         else:
             return key, None
 
     def setObject(self, obj, key, bucket):
         if not self._bucket_exists(bucket):
             self._create_bucket(bucket)
+        blob = sqlite3.Binary(compress(jsonify(obj).encode('utf-8')))
         self.conn.execute("REPLACE INTO `{}` (key, value) VALUES (?, ?)"
                           .format(hash(bucket)),
-                          (key, memoryview(compress(jsonify(obj)))))
+                          (key, blob))
+
         self.conn.commit()
 
     def updateObject(self, obj, key, bucket):
@@ -114,7 +116,7 @@ class SqliteDriver(object):
             return
         for k, v in self.conn.execute("SELECT key, value from `{}`"
                                       .format(hash(bucket))):
-            yield (k, dejsonify(decompress(v)))
+            yield (k, dejsonify(decompress(v).decode('utf-8')))
 
     def deleteObject(self, key, bucket, commit=True):
         if self._bucket_exists(bucket):
