@@ -18,6 +18,7 @@ from __future__ import print_function
 from __future__ import unicode_literals
 from pyaib.plugins import observe, keyword, plugin_class
 import re
+import functools
 
 # allow for yoda style karam
 kregex = re.compile(r'^(\+\+|--)?(.+?)(\+\+|--)?$')
@@ -29,6 +30,8 @@ class Karma(object):
     def __init__(self, irc_context, config):
         self.db = irc_context.db.get('plugin.karma')
         self.scanner = True
+        self.pronoun = config.get('pronoun', 'her')
+        self.scanner_refresh = config.get('scanner_refresh', 3600 * 12)
         print("Karma Plugin Loaded!")
 
     @keyword('karma')
@@ -48,24 +51,25 @@ class Karma(object):
             who = args[0]
 
         if karma > 9000:
-            msg.reply("\001ACTION removes their karma scanner.\001")
+            msg.reply("\001ACTION removes {} karma scanner.\001"
+                      .format(self.pronoun))
             msg.reply("It's Over 9000!")
-            msg.reply("\001ACTION crushes the karma scanner in their clenched "
-                      "fist.\001")
+            msg.reply("\001ACTION crushes the karma scanner in {} clenched "
+                      "fist.\001".format(self.pronoun))
             self.scanner = False
+            self.where = msg.channel
             irc_c.timers.set('ORDER-KARMA-SCANNER',
-                             self.get_scanner,
-                             at=msg.timestamp + 3600 * 12)
+                             functools.partial(self.get_scanner, msg.reply),
+                             at=msg.timestamp + self.scanner_refresh)
         else:
             msg.reply("Karma for {} is {}".format(who, karma))
 
-    def get_scanner(self, irc_c, alarm):
+    def get_scanner(self, reply, irc_c, alarm):
         if self.scanner:
             return
         self.scanner = True
-        irc_c.PRIVMSG('#sro',
-                      '\001ACTION receives a karma scanner and equips it '
-                      'over their left eye.\001')
+        reply('\001ACTION receives a karma scanner and equips it '
+              'over {} left eye.\001'.format(self.pronoun))
 
     def get_karma(self, thing):
         item = self.db.get(thing)
