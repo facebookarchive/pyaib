@@ -60,18 +60,21 @@ class Channels(object):
     def _join_parser(self, msg, irc_c):
         msg.raw_channel = re.sub(r'^:', '', msg.args.strip())
         msg.channel = msg.raw_channel.lower()
+        msg.reply = lambda text: irc_c.PRIVMSG(msg.channel, text)
 
     @msg_parser('PART')
     def _part_parser(self, msg, irc_c):
         msg.raw_channel, _, message = msg.args.strip().partition(' ')
         msg.channel = msg.raw_channel.lower()
         msg.message = re.sub(r'^:', '', message)
+        msg.reply = lambda text: irc_c.PRIVMSG(msg.channel, text)
 
     @msg_parser('KICK')
     def _kick_parser(self, msg, irc_c):
         msg.raw_channel, msg.victim, message = msg.args.split(' ', 2)
         msg.channel = msg.raw_channel.lower()
         msg.message = re.sub(r'^:', '', message)
+        msg.reply = lambda text: irc_c.PRIVMSG(msg.channel, text)
 
     @observes('IRC_MSG_JOIN')
     def _join(self, irc_c, msg):
