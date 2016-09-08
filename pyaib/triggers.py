@@ -172,5 +172,6 @@ class Triggers(Events):
             if trigger:
                 args, keywords = self.parse(allargs)
                 #Call the trigger with parsed args
+                msg = msg.copy(irc_c)
                 msg.unparsed = allargs
                 trigger(irc_c, msg, word, args, keywords)

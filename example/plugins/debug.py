@@ -55,6 +55,15 @@ class Debug(object):
         msg.reply('Trigger: %r' % trigger)
         msg.reply('ARGS: %r' % args)
         msg.reply('KEYWORDS: %r' % kargs)
+        msg.reply('Unparsed: %r' % msg.unparsed)
+
+    @keyword('test')
+    @keyword.sub('sub')
+    def argsubtest(self, irc_c, msg, trigger, args, kargs):
+        msg.reply('Triggers: %r' % trigger)
+        msg.reply('ARGS: %s' % args)
+        msg.reply('KEYWORDS: %r' % kargs)
+        msg.reply('Unparsed: %r' % msg.unparsed)
 
     @keyword('join')
     def join(self, irc_c, msg, trigger, args, kargs):

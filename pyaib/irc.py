@@ -301,6 +301,9 @@ class Message (object):
     def get_parser(cls, kind):
         return cls._parsers.get(kind)
 
+    def copy(self, irc_c):
+        return type(self)(irc_c, self.raw)
+
     def __init__(self, irc_c, raw):
         self.raw = raw
         match = Message.MSG_REGEX.search(raw)

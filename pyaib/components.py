@@ -248,6 +248,9 @@ class triggers_on(object):
 
         def wrapper(dec, irc_c, msg, trigger, args, kargs):
             if args and args[0].lower() in dec._subs:
+                unparsed = msg.unparsed
+                msg = msg.copy(irc_c)
+                msg.unparsed = unparsed[len(args[0]) + 1:]
                 return dec.call(irc_c, msg, '%s %s' % (trigger,
                                                        args[0].lower()),
                                 args[1:], kargs)
