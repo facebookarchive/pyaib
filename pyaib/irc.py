@@ -376,6 +376,7 @@ class Message (object):
 Message.add_parser('PRIVMSG', Message._directed_message)
 Message.add_parser('NOTICE', Message._directed_message)
 Message.add_parser('INVITE', Message._directed_message)
+Message.add_parser('TOPIC', Message._directed_message)
 
 
 class Sender(str):

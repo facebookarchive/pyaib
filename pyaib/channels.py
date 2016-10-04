@@ -76,6 +76,13 @@ class Channels(object):
         msg.message = re.sub(r'^:', '', message)
         msg.reply = lambda text: irc_c.PRIVMSG(msg.channel, text)
 
+    @msg_parser('332')
+    def _topic_parser(self, msg, irc_c):
+        _, msg.raw_channel, message = msg.args.split(' ', 2)
+        msg.channel = msg.raw_channel.lower()
+        msg.message = re.sub(r'^:', '', message)
+        msg.reply = lambda text: irc_c.PRIVMSG(msg.channel, text)
+
     @observes('IRC_MSG_JOIN')
     def _join(self, irc_c, msg):
         #Only Our Joins
