@@ -19,8 +19,11 @@ try:
 except ImportError:
     from distutils.core import setup
 
-#Pull version out of the module
+# Pull version out of the module
 from pyaib import __version__
+
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
 
 setup(name='pyaib',
       version=__version__,
@@ -38,8 +41,6 @@ setup(name='pyaib',
           'Intended Audience :: Developers',
           'Development Status :: 5 - Production/Stable',
       ],
-      install_requires=[
-          'pyOpenSSL >= 0.12',
-          'gevent >= 1.1.0',
-          'PyYAML >= 3.09',
-      ])
+      include_package_data=True,
+      install_requires=requirements
+      )
