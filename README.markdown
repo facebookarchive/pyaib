@@ -31,3 +31,9 @@ Run:
 Try adding your own plugins in example/plugins.
 
 Take a look at the [wiki](https://github.com/facebook/pyaib/wiki) for information about plugin writing and using the db component. 
+
+See the [CONTRIBUTING](CONTRIBUTING.md) file for how to help out.
+
+License
+=======
+pyaib is Apache licensed, as found in the LICENSE file.
