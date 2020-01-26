@@ -20,7 +20,7 @@ def await_signal(irc_c, name, *, timeout=None):
     # create signal if it doesn't already exist
     event = irc_c.signals(name)._event
     recieved = event.wait(timeout)
-    if not recieved:
+    if recieved is False:
         raise TimeoutError("Waiting for signal %s timed out" % name)
     return recieved
 
@@ -49,10 +49,10 @@ class Signal:
     def fire(self, *args, **kwargs):
         # args kept in 1 argument to be passed to greenlet easily
         irc_c = args[0]
-        data = args[1]
-        # initiate a decorated waiter.
-        # existing waiting greenlets are not affected by this
         assert isinstance(irc_c, irc.Context)
+        # activate the event for waiting existing greenlets
+        self._event.set()
+        # manually initiate decorated observers
         for observer in self.__observers:
             if isinstance(observer, collections.Callable):
                 irc_c.bot_greenlets.spawn(observer, *args, **kwargs)
