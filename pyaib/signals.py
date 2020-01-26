@@ -5,11 +5,11 @@ import gevent.event
 
 from . import irc
 
-def emit_signal(irc_c, name):
+def emit_signal(irc_c, name, data=None):
     """Emits the signal of the given name."""
     # create signal if it doesn't already exist
     signal = irc_c.signals(name)
-    signal.fire(irc_c)
+    signal.fire(irc_c, data)
 
 def await_signal(irc_c, name, timeout=None):
     """Blocks until the signal of the given name is recieved."""
@@ -41,13 +41,16 @@ class Signal:
         self.__observers.remove(observer)
         return self
 
-    def fire(self, irc_c, *args, **keywargs):
+    def fire(self, *args, **kwargs):
+        # args kept in 1 argument to be passed to greenlet easily
+        irc_c = args[0]
+        data = args[1]
         # initiate a decorated waiter.
         # existing waiting greenlets are not affected by this
         assert isinstance(irc_c, irc.Context)
         for observer in self.__observers:
             if isinstance(observer, collections.Callable):
-                irc_c.bot_greenlets.spawn(observer, *args, **keywargs)
+                irc_c.bot_greenlets.spawn(observer, *args, **kwargs)
             else:
                 raise TypeError("%s not callable" % repr(observer))
 

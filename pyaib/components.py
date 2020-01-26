@@ -346,7 +346,7 @@ class ComponentManager(object):
                     self._add_parsers(method, name, chain)
             elif kind == 'signals':
                 for signal in args:
-                    context.signals(word).observe(method)
+                    context.signals(signal).observe(method)
 
     def _add_parsers(self, method, name, chain):
         """ Handle Message parser adding and chaining """
