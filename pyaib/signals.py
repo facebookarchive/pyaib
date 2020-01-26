@@ -5,14 +5,18 @@ import gevent.event
 
 from . import irc
 
-def emit_signal(irc_c, name, data=None):
+def emit_signal(irc_c, name, *, data=None):
     """Emits the signal of the given name."""
+    if not isinstance(irc_c, irc.Context):
+        raise TypeError("First argument must be IRC context")
     # create signal if it doesn't already exist
     signal = irc_c.signals(name)
     signal.fire(irc_c, data)
 
-def await_signal(irc_c, name, timeout=None):
+def await_signal(irc_c, name, *, timeout=None):
     """Blocks until the signal of the given name is recieved."""
+    if not isinstance(irc_c, irc.Context):
+        raise TypeError("First argument must be IRC context")
     # create signal if it doesn't already exist
     event = irc_c.signals(name)._event
     recieved = event.wait(timeout)
@@ -22,6 +26,7 @@ def await_signal(irc_c, name, timeout=None):
 
 def _unfire_signal(name, irc_c):
     """Resets emitted signals for later reuse."""
+    # TODO make arguments match what emission actually does
     irc_c.signals[name].unfire()
 
 class Signal:
