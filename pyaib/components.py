@@ -108,6 +108,7 @@ observe = watches
 handle = watches
 handles = watches
 
+
 def awaits_signal(*signals):
     """Define a series of signals to later be subscribed to"""
     def wrapper(func):
@@ -343,6 +344,9 @@ class ComponentManager(object):
             elif kind == 'parsers':
                 for name, chain in args:
                     self._add_parsers(method, name, chain)
+            elif kind == 'signals':
+                for signal in args:
+                    context.signals(word).observe(method)
 
     def _add_parsers(self, method, name, chain):
         """ Handle Message parser adding and chaining """
