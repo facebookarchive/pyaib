@@ -7,26 +7,29 @@ from . import irc
 
 def emit_signal(irc_c, name):
     """Emits the signal of the given name."""
-    # TODO create signal if it doesn't already exist
+    # create signal if it doesn't already exist
+    signal = irc_c.signals(name)
+    signal.fire(irc_c)
 
 def await_signal(irc_c, name, timeout=None):
     """Blocks until the signal of the given name is recieved."""
-    # TODO create signal if it doesn't already exist
-    # add myself to the list of observers
+    # create signal if it doesn't already exist
     event = irc_c.signals(name)._event
     recieved = event.wait(timeout)
     if not recieved:
         raise TimeoutError("Waiting for signal %s timed out" % name)
     return recieved
-    # remove myself from the list of observers
 
-def awaits_signal(irc_c, name):
+def awaits_signal(name):
+    # XXX moved to components (where watches is)
     """Decorator; call this function when the signal is recieved."""
     # XXX this shouldn't have irc_c? How do other decorators work
-    # TODO create signal if it doesn't already exist
+    # create signal if it doesn't already exist
+    signal = irc_c.signals(name)
     # add this function to the list of observers
     def wrapper(func):
-        pass
+        signal.observe(func)
+        return func
     return wrapper
 
 def _unfire_signal(name, irc_c):
@@ -36,14 +39,13 @@ def _unfire_signal(name, irc_c):
 class Signal:
     def __init__(self):
         self.__observers = [] # list of stuff waiting on this event
+        self.__observers.append(_unfire_signal)
         self._event = gevent.event.Event()
 
     def observe(self, observer):
-        # XXX this is ok for decorators but not normal waiters
         if isinstance(observer, collections.Callable):
             self.__observers.append(observer)
         else:
-            # XXX should throw?
             raise TypeError("%s not callable" % repr(observer))
         return self
 
@@ -52,14 +54,12 @@ class Signal:
         return self
 
     def fire(self, irc_c, *args, **keywargs):
+        # initiate a decorated waiter.
+        # existing waiting greenlets are not affected by this
         assert isinstance(irc_c, irc.Context)
-        # initiate or resume each observer
         for observer in self.__observers:
             if isinstance(observer, collections.Callable):
                 irc_c.bot_greenlets.spawn(observer, *args, **keywargs)
-            elif False:
-                # TODO resume existing wating greenlets
-                pass
             else:
                 raise TypeError("%s not callable" % repr(observer))
 

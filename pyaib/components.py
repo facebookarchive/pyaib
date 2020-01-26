@@ -108,6 +108,14 @@ observe = watches
 handle = watches
 handles = watches
 
+def awaits_signal(*signals):
+    """Define a series of signals to later be subscribed to"""
+    def wrapper(func):
+        splugs = _get_plugs(func, 'signals')
+        splugs.extend([signal for signal in signals if signal not in splugs])
+        return func
+    return wrapper
+
 
 class _Ignore(EasyDecorator):
     """Only pass if triggers is from user not ignored"""
