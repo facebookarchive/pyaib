@@ -20,18 +20,6 @@ def await_signal(irc_c, name, timeout=None):
         raise TimeoutError("Waiting for signal %s timed out" % name)
     return recieved
 
-def awaits_signal(name):
-    # XXX moved to components (where watches is)
-    """Decorator; call this function when the signal is recieved."""
-    # XXX this shouldn't have irc_c? How do other decorators work
-    # create signal if it doesn't already exist
-    signal = irc_c.signals(name)
-    # add this function to the list of observers
-    def wrapper(func):
-        signal.observe(func)
-        return func
-    return wrapper
-
 def _unfire_signal(name, irc_c):
     """Resets emitted signals for later reuse."""
     irc_c.signals[name].unfire()
