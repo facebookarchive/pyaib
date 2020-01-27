@@ -57,19 +57,17 @@ class Signal:
             else:
                 raise TypeError("%s not callable" % repr(observer))
         # finally, initiate the unfiring event
-        irc_c.bot_greenlets.spawn(self.wait_then_unfire, irc_c)
+        irc_c.bot_greenlets.spawn(self.wait_then_unfire)
 
     def unfire(self):
         # reset the gevent event
         self._event.clear()
         self._data = None
 
-    def wait_then_unfire(self, irc_c):
-        print("UNF Waiting to unfire {}".format(self.name))
+    def wait_then_unfire(self):
         # Waits for the signal, then unfires it.
         # Guaranteed to be the last existing waiter executed.
-        await_signal(irc_c, self.name)
-        print("UNF Unfiring {}".format(self.name))
+        self._event.wait()
         self.unfire()
 
     def getObserverCount(self):
