@@ -33,7 +33,7 @@ class Names:
         channel = response[0]
         names = response[1]
         assert channel == message.channel
-        message.reply("List of channel members: %s" % ", ".join(names))
+        message.reply("List of channel members: %s" % len(names))
 
     @observe('IRC_MSG_353') # 353 indicates a NAMES response.
     def recieve_names(self, irc_c, message):
@@ -41,8 +41,8 @@ class Names:
         # "MYNICK = #channel :nick1 nick2 nick3"
         # Split that up into individual names:
         response = re.split(r"\s:?", message.args.strip())[2:]
-        channel = response.pop(0)
-        names = response[:]
+        channel = response[0]
+        names = response[1:]
         # Great, we've caught the NAMES response.
         # Now send it back to the function that wanted it.
         emit_signal(irc_c, 'NAMES_RESPONSE', data=(channel, names))
