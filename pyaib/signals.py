@@ -26,6 +26,15 @@ def await_signal(irc_c, name, *, timeout=None):
     data = copy(signal._data)
     return data
 
+def clear_signal(irc_c, name):
+    """Stop emitting the signal of the given name."""
+    if not isinstance(irc_c, irc.Context):
+        raise TypeError("First argument must be IRC context")
+    if not name in irc_c.signals.list():
+        raise ValueError("Signal %s doesn't exist" % name)
+    signal = irc_c.signals[name]
+    signal.unfire()
+
 class Signal:
     def __init__(self, name):
         self.__observers = [] # list of stuff waiting on this event
@@ -46,7 +55,6 @@ class Signal:
 
     def fire(self, irc_c, data):
         assert isinstance(irc_c, irc.Context)
-        # Queue the function that unfires this event
         # activate the event for waiting existing greenlets
         self._data = data
         self._event.set()
@@ -56,34 +64,28 @@ class Signal:
                 irc_c.bot_greenlets.spawn(observer, irc_c, copy(data))
             else:
                 raise TypeError("%s not callable" % repr(observer))
-        # finally, initiate the unfiring event
-        irc_c.bot_greenlets.spawn(self.wait_then_unfire)
+        # signal now needs to be unfired by the user
 
     def unfire(self):
         # reset the gevent event
         self._event.clear()
         self._data = None
 
-    def wait_then_unfire(self):
-        # Waits for the signal, then unfires it.
-        # Guaranteed to be the last existing waiter executed.
-        self._event.wait()
-        self.unfire()
+    # Observer counts are inaccurate: no way to tell how many existing waiters
+    # def getObserverCount(self):
+    #     return len(self.__observers)
 
-    def getObserverCount(self):
-        return len(self.__observers)
+    # def observers(self):
+    #     return self.__observers
 
-    def observers(self):
-        return self.__observers
+    # def __bool__(self):
+    #     return self.getObserverCount() > 0
 
-    def __bool__(self):
-        return self.getObserverCount() > 0
-
-    __nonzero__ = __bool__  # 2.x compat
+    # __nonzero__ = __bool__  # 2.x compat
     __iadd__ = observe
     __isub__ = unobserve
-    __call__ = fire
-    __len__ = getObserverCount
+    # __call__ = fire
+    # __len__ = getObserverCount
 
 class Signals:
     # Stores all the different signals.
