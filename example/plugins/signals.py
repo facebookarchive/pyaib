@@ -33,7 +33,8 @@ class Names:
         channel = response[0]
         names = response[1]
         assert channel == message.channel
-        message.reply("List of channel members: %s" % len(names))
+        message.reply("List of channel members: %s" % ", ".join(names))
+        # Warning, this will annoy everyone in the channel.
 
     @observe('IRC_MSG_353') # 353 indicates a NAMES response.
     def recieve_names(self, irc_c, message):
