@@ -8,7 +8,6 @@ from . import irc
 
 def emit_signal(irc_c, name, *, data=None):
     """Emits the signal of the given name."""
-    print('Emitting {} with {}'.format(name, data))
     if not isinstance(irc_c, irc.Context):
         raise TypeError("First argument must be IRC context")
     # create signal if it doesn't already exist
@@ -25,7 +24,6 @@ def await_signal(irc_c, name, *, timeout=None):
     if recieved is False:
         raise TimeoutError("Waiting for signal %s timed out" % name)
     data = copy(signal._data)
-    print('Found {} with {}'.format(name, data))
     return data
 
 class Signal:
