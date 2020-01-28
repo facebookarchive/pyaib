@@ -2,7 +2,8 @@
 
 import collections
 import gevent.event
-from copy import copy
+import gevent.queue
+import gevent
 
 from . import irc
 
@@ -10,36 +11,26 @@ def emit_signal(irc_c, name, *, data=None):
     """Emits the signal of the given name."""
     if not isinstance(irc_c, irc.Context):
         raise TypeError("First argument must be IRC context")
+    if data is False:
+        raise ValueError("Signalled data cannot be False")
     # create signal if it doesn't already exist
     signal = irc_c.signals(name)
     signal.fire(irc_c, data)
 
 def await_signal(irc_c, name, *, timeout=None):
-    """Blocks until the signal of the given name is recieved."""
+    """Blocks until the signal of the given name is recieved, returning any
+    data that was passed to it."""
     if not isinstance(irc_c, irc.Context):
         raise TypeError("First argument must be IRC context")
     # create signal if it doesn't already exist
     signal = irc_c.signals(name)
-    recieved = signal._event.wait(timeout)
-    if recieved is False:
-        raise TimeoutError("Waiting for signal %s timed out" % name)
-    data = copy(signal._data)
-    return data
-
-def clear_signal(irc_c, name):
-    """Stop emitting the signal of the given name."""
-    if not isinstance(irc_c, irc.Context):
-        raise TypeError("First argument must be IRC context")
-    if not name in irc_c.signals.list():
-        raise ValueError("Signal %s doesn't exist" % name)
-    signal = irc_c.signals[name]
-    signal.unfire()
+    return signal.wait(timeout)
 
 class Signal:
     def __init__(self, name):
-        self.__observers = [] # list of stuff waiting on this event
-        self._event = gevent.event.Event()
-        self._data = None
+        self.__event = gevent.event.Event()
+        self.__observers = [] # decorated observers
+        self.__waiters = [] # waiting greenlets
         self.name = name
 
     def observe(self, observer):
@@ -55,37 +46,29 @@ class Signal:
 
     def fire(self, irc_c, data):
         assert isinstance(irc_c, irc.Context)
-        # activate the event for waiting existing greenlets
-        self._data = data
-        self._event.set()
+        # resume waiting greenlets
+        waiters = list(self.__waiters)
+        self.__waiters.clear()
+        gevent.spawn(self._notify, waiters, data)
         # manually initiate decorated observers
         for observer in self.__observers:
             if isinstance(observer, collections.Callable):
                 irc_c.bot_greenlets.spawn(observer, irc_c, copy(data))
             else:
                 raise TypeError("%s not callable" % repr(observer))
-        # signal now needs to be unfired by the user
 
-    def unfire(self):
-        # reset the gevent event
-        self._event.clear()
-        self._data = None
+    @staticmethod
+    def _notify(waiters, data):
+        for queue in waiters:
+            queue.put_nowait(data)
 
-    # Observer counts are inaccurate: no way to tell how many existing waiters
-    # def getObserverCount(self):
-    #     return len(self.__observers)
-
-    # def observers(self):
-    #     return self.__observers
-
-    # def __bool__(self):
-    #     return self.getObserverCount() > 0
-
-    # __nonzero__ = __bool__  # 2.x compat
-    __iadd__ = observe
-    __isub__ = unobserve
-    # __call__ = fire
-    # __len__ = getObserverCount
+    def wait(self, timeout):
+        queue = gevent.queue.Channel()
+        self.__waiters.append(queue)
+        data = queue.get(timeout)
+        if data is False:
+            raise TimeoutError("The request timed out.")
+        return data
 
 class Signals:
     # Stores all the different signals.
