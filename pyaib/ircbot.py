@@ -35,6 +35,7 @@ import gevent
 from .config import Config
 from .events import Events
 from .timers import Timers
+from .signals import Signals
 from .components import ComponentManager
 from . import irc
 
@@ -54,6 +55,7 @@ class IrcBot(object):
         #Install most basic fundamental functionality
         install('events', self._loadComponent(Events, False))
         install('timers', self._loadComponent(Timers, False))
+        install('signals', self._loadComponent(Signals, False))
 
         #Load the ComponentManager and load components
         autoload = ['triggers', 'channels', 'plugins']  # Force these to load

@@ -109,6 +109,15 @@ handle = watches
 handles = watches
 
 
+def awaits_signal(*signals):
+    """Define a series of signals to later be subscribed to"""
+    def wrapper(func):
+        splugs = _get_plugs(func, 'signals')
+        splugs.extend([signal for signal in signals if signal not in splugs])
+        return func
+    return wrapper
+
+
 class _Ignore(EasyDecorator):
     """Only pass if triggers is from user not ignored"""
     def wrapper(dec, irc_c, msg, *args):
@@ -335,6 +344,9 @@ class ComponentManager(object):
             elif kind == 'parsers':
                 for name, chain in args:
                     self._add_parsers(method, name, chain)
+            elif kind == 'signals':
+                for signal in args:
+                    context.signals(signal).observe(method)
 
     def _add_parsers(self, method, name, chain):
         """ Handle Message parser adding and chaining """
